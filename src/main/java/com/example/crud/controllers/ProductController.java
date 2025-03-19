@@ -1,5 +1,6 @@
 package com.example.crud.controllers;
 
+import com.example.crud.FilterProducts;
 import com.example.crud.domain.product.Product;
 import com.example.crud.domain.product.ProductRepository;
 import com.example.crud.domain.product.RequestCategory;
@@ -8,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +24,11 @@ import java.util.stream.Collectors;
 public class ProductController {
     @Autowired
     private ProductRepository repository;
+    private FilterProducts filterProducts;
 
     @GetMapping
     public ResponseEntity getAllProducts(){
-        var allProducts = repository.findAllByActiveTrue();
+        List<Product> allProducts = repository.findAll();
         return ResponseEntity.ok(allProducts);
     }
 
@@ -63,4 +66,35 @@ public class ProductController {
         }
     }
 
+//    NEW
+    @GetMapping("/category")
+    public ResponseEntity findProductByCategory(@RequestParam RequestCategory category) {
+        List<Product> productList = this.repository.findAllByCategory(category.category());
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .body(productList);
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity findProductByTitle(@PathVariable String id) {
+        Product product = repository.findByIdRawQuery(id).orElseThrow(EntityNotFoundException::new);
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .body(product);
+    }
+
+    @GetMapping("/price")
+    public ResponseEntity findThreeMostExpensiveProduct() {
+        List<Product> productList = this.repository.findAll();
+        this.filterProducts.setProducts(productList);
+        this.filterProducts.setLimit(3);
+
+        List<Product> productsFiltered = this.filterProducts.perPrice();
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .body(productsFiltered);
+    }
 }
