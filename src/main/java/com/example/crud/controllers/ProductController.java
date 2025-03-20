@@ -2,19 +2,15 @@ package com.example.crud.controllers;
 
 import com.example.crud.domain.product.Product;
 import com.example.crud.domain.product.ProductRepository;
-import com.example.crud.domain.product.RequestCategory;
 import com.example.crud.domain.product.RequestProduct;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,6 +30,16 @@ public class ProductController {
         Product newProduct = new Product(data);
         repository.save(newProduct);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/category")
+    public List<Product> listProduct(@RequestParam String category){
+        return repository.findByCategory(category);
+    }
+
+    @GetMapping("/{id}")
+    public Product findById(@PathVariable String id){
+        return repository.findOne(id);
     }
 
     @PutMapping
@@ -62,5 +68,27 @@ public class ProductController {
             throw new EntityNotFoundException();
         }
     }
+    @GetMapping("/top3")
+    public List<Product> getTop3Products(){
+        return repository.findAll().stream().
+                sorted(Comparator.comparing(Product::getPrice).reversed())
+                .limit(3)
+                .collect(Collectors.toList());
+    }
 
+    @GetMapping("/groupby")
+    public List<Product> getProductsGroupBy(){
+        return repository.findAllGroupByCategoryOrderByPrice();
+    }
+
+    @GetMapping("/groupByLogicaApp")
+    public ResponseEntity getProductsByCategoryLogicaApp(){
+        List<Product> products = repository.findAllByActiveTrue();
+
+        List<Product> productsByCategory =  products.stream()
+                .sorted(Comparator.comparing(Product::getCategory)
+                        .thenComparing(Product::getPrice))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(productsByCategory);
+    }
 }

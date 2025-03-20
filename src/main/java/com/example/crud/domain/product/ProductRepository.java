@@ -5,8 +5,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, String> {
     List<Product> findAllByActiveTrue();
+
+    List<Product>findByCategory(String category);
+
+    @Query(value = "SELECT p FROM product p WHERE p.id = :id")
+    Product findOne(@Param("id") String id);
+
+    @Query(value = "SELECT p FROM product p WHERE p.active = true ORDER BY p.category, p.price asc")
+    List<Product> findAllGroupByCategoryOrderByPrice();
+
 }
