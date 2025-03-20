@@ -4,6 +4,7 @@ import com.example.crud.domain.product.Product;
 import com.example.crud.domain.product.ProductRepository;
 import com.example.crud.domain.product.RequestCategory;
 import com.example.crud.domain.product.RequestProduct;
+import com.example.crud.service.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,11 +24,32 @@ import java.util.stream.Collectors;
 public class ProductController {
     @Autowired
     private ProductRepository repository;
+    @Autowired
+    private ProductService productService;
+
 
     @GetMapping
     public ResponseEntity getAllProducts(){
         var allProducts = repository.findAllByActiveTrue();
         return ResponseEntity.ok(allProducts);
+    }
+
+    @GetMapping("/category")
+    public ResponseEntity getProductsByCategory(@RequestParam String category) {
+        var products = repository.findByCategory(category);
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity getProductById(@PathVariable String id) {
+        var product = repository.findById(id);
+        return ResponseEntity.ok(product);
+    }
+
+    @GetMapping("/top3")
+    public ResponseEntity getTop3Products() {
+        List<Product> top3Products = productService.getTop3Products();
+        return ResponseEntity.ok(top3Products);
     }
 
     @PostMapping
