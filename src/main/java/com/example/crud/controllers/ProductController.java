@@ -77,27 +77,18 @@ public class ProductController {
     }
 
     @GetMapping("/groupby")
-    public ResponseEntity <Map<String, List<Product>>> getProductsByCategory(){
-        List<Product> products = repository.findAllByActiveTrue();
-
-        Map<String, List<Product>> productsByCategory = products.stream()
-                .collect(Collectors.groupingBy(Product::getCategory));
-
-        productsByCategory.forEach((category, productList) ->
-                productList.sort(Comparator.comparing(Product::getPrice)));
-
-        return ResponseEntity.ok(productsByCategory);
+    public List<Product> getProductsGroupBy(){
+        return repository.findAllGroupByCategoryOrderByPrice();
     }
 
     @GetMapping("/groupByLogicaApp")
-    public ResponseEntity <Map<String, List<Product>>> getProductsByCategoryLogicaApp(){
+    public ResponseEntity getProductsByCategoryLogicaApp(){
         List<Product> products = repository.findAllByActiveTrue();
 
-        Map<String, List<Product>> productsByCategory = products.stream()
-                .filter(Product::getActive)
+        List<Product> productsByCategory =  products.stream()
                 .sorted(Comparator.comparing(Product::getCategory)
                         .thenComparing(Product::getPrice))
-                .collect(Collectors.groupingBy(Product::getCategory));
+                .collect(Collectors.toList());
         return ResponseEntity.ok(productsByCategory);
     }
 }

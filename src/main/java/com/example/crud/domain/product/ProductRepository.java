@@ -14,7 +14,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query(value = "SELECT p FROM product p WHERE p.id = :id")
     Product findOne(@Param("id") String id);
 
-    @Query(value = "SELECT p FROM product p WHERE p.active = true ORDER BY p.category, p.price")
+    @Query(value = "SELECT p FROM product p WHERE p.active = true ORDER BY p.category, p.price asc")
     List<Product> findAllGroupByCategoryOrderByPrice();
 
 }
