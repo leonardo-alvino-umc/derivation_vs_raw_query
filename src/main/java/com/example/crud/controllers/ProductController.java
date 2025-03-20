@@ -10,9 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -78,4 +76,28 @@ public class ProductController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/groupby")
+    public ResponseEntity <Map<String, List<Product>>> getProductsByCategory(){
+        List<Product> products = repository.findAllByActiveTrue();
+
+        Map<String, List<Product>> productsByCategory = products.stream()
+                .collect(Collectors.groupingBy(Product::getCategory));
+
+        productsByCategory.forEach((category, productList) ->
+                productList.sort(Comparator.comparing(Product::getPrice)));
+
+        return ResponseEntity.ok(productsByCategory);
+    }
+
+    @GetMapping("/groupByLogicaApp")
+    public ResponseEntity <Map<String, List<Product>>> getProductsByCategoryLogicaApp(){
+        List<Product> products = repository.findAllByActiveTrue();
+
+        Map<String, List<Product>> productsByCategory = products.stream()
+                .filter(Product::getActive)
+                .sorted(Comparator.comparing(Product::getCategory)
+                        .thenComparing(Product::getPrice))
+                .collect(Collectors.groupingBy(Product::getCategory));
+        return ResponseEntity.ok(productsByCategory);
+    }
 }
