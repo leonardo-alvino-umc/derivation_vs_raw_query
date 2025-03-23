@@ -4,28 +4,30 @@ import com.example.crud.domain.product.Product;
 import com.example.crud.domain.product.ProductRepository;
 import com.example.crud.domain.product.RequestCategory;
 import com.example.crud.domain.product.RequestProduct;
+import com.example.crud.services.FilterProductsService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/product")
 public class ProductController {
     @Autowired
     private ProductRepository repository;
+    @Autowired
+    private FilterProductsService filterProducts;
 
     @GetMapping
     public ResponseEntity getAllProducts(){
-        var allProducts = repository.findAllByActiveTrue();
+        List<Product> allProducts = repository.findAll();
         return ResponseEntity.ok(allProducts);
     }
 
@@ -63,4 +65,64 @@ public class ProductController {
         }
     }
 
+//    NEW
+    @GetMapping("/category")
+    public ResponseEntity findProductByCategory(@RequestParam RequestCategory category) {
+        List<Product> productList = this.repository.findAllByCategory(category.category());
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .body(productList);
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity findProductByTitle(@PathVariable String id) {
+        Product product = repository.findByIdRawQuery(id).orElseThrow(EntityNotFoundException::new);
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .body(product);
+    }
+
+    @GetMapping("/price")
+    public ResponseEntity findThreeMostExpensiveProduct() {
+        List<Product> productList = this.repository.findAll();
+
+        List<Product> productsFiltered = this.filterProducts.perPrice(productList, 3);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(productsFiltered);
+    }
+
+    @GetMapping("/price-category-bd")
+    public ResponseEntity findAllGroupedByCategoryAndOrderedByPriceFromBd() {
+        List<Product> productList = repository.findAllGroupedByCategoryAndOrderedByPrice();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(productList);
+    }
+
+    @GetMapping("/price-category-app")
+    public ResponseEntity findAllGroupedByCategoryAndOrderedByPriceFromApp() {
+        List<Product> productList = repository.findAll();
+
+        Map<String, List<Product>> filteredProducts = filterProducts.groupedByCategoryAndOrderedByPrice(productList);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(filteredProducts);
+    }
+
+    @GetMapping("/price-category-app2")
+    public ResponseEntity findAllGroupedByCategoryAndOrderedByPriceFromApp2() {
+        List<Product> productList = repository.findAll();
+
+        List<Product> filteredProducts = filterProducts.groupedByCategoryAndOrderedByPrice2(productList);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(filteredProducts);
+    }
 }
